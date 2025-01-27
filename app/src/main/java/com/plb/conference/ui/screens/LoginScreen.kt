@@ -1,6 +1,5 @@
 package com.plb.conference.ui.screens
 
-import LoginViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,12 +7,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.yourapp.ui.screens.login.LoginViewModel
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (token: String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val email by viewModel.email.collectAsState()
@@ -21,7 +21,7 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onLoginSuccess()
+            onLoginSuccess(uiState.token ?: "")
         }
     }
 

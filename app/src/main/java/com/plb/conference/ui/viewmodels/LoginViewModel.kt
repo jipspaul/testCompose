@@ -1,5 +1,8 @@
+package com.example.yourapp.ui.screens.login
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.plb.conference.data.UserPreferencesRepository
 import com.plb.conference.services.AuthApi
 import com.plb.conference.ui.models.LoginUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,7 +10,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val authApi: AuthApi
+    private val authApi: AuthApi,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
@@ -17,6 +21,17 @@ class LoginViewModel(
 
     private var _password = MutableStateFlow("")
     val password = _password.asStateFlow()
+
+    init {
+        // Check if user is already logged in
+        viewModelScope.launch {
+            userPreferencesRepository.authToken.collect { token ->
+                if (!token.isNullOrEmpty()) {
+                    _uiState.value = LoginUiState(isSuccess = true, token = token)
+                }
+            }
+        }
+    }
 
     fun updateEmail(newEmail: String) {
         _email.value = newEmail
@@ -30,9 +45,16 @@ class LoginViewModel(
         viewModelScope.launch {
             _uiState.value = LoginUiState(isLoading = true)
             try {
-                val response = authApi.login(_email.value, _password.value)
+                val response = authApi.login(
+                    username = _email.value,
+                    password = _password.value
+                )
+
                 if (response.isSuccessful && response.body() != null) {
-                    _uiState.value = LoginUiState(isSuccess = true)
+                    val loginResponse = response.body()!!
+                    // Save token
+                    userPreferencesRepository.saveAuthToken(loginResponse.access_token)
+                    _uiState.value = LoginUiState(isSuccess = true, token = loginResponse.access_token)
                 } else {
                     _uiState.value = LoginUiState(error = "Invalid credentials")
                 }

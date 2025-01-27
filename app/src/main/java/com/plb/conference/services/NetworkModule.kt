@@ -1,4 +1,5 @@
 import com.plb.conference.services.AuthApi
+import com.plb.conference.ui.activities.UserApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -26,4 +27,5 @@ object NetworkModule {
         .build()
 
     val authApi: AuthApi = retrofit.create(AuthApi::class.java)
+    val userApi: UserApi = retrofit.create(UserApi::class.java)
 }
